@@ -5,11 +5,13 @@
 #include <string>
 #include <vector>
 #include "../TOKEN/token.h"
+#include "../STORE/store.h"
 
 using namespace std;
 
 class PARSER {
     private:
+        STORE s;
         int CURSOR = 0;
         int SAVED_CURSOR = 0;
         vector<TOKEN> TOKENS;
@@ -25,6 +27,7 @@ class PARSER {
         bool ASSIGNMENT_STATEMENT();
         bool DECLARATION_STATEMENT();
         bool INC_DEC_STATEMENT();
+        TOKEN peekToken();
         //EXPRESSION
         bool EXPRESSION();
         bool TERM();
@@ -57,6 +60,15 @@ class PARSER {
         // ITERATION_STATEMENT //
         bool ITERATION_STATEMENT();
         bool LOOP();
+        bool WHILE();
+        bool DO_WHILE();
+        /////////////////////////
+        bool FUNCTION_STATEMENT();
+        bool PARAMETERS();
+        /////////////////////////
+        bool INPUT_STATEMENTS();
+        bool OUTPUT_STATEMENTS();
+        bool OUTPUTS();
     public:
         void PARSE(vector<TOKEN>);
 };

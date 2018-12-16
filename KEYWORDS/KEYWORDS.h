@@ -29,19 +29,26 @@ const string KW_LOOPUNTIL="loopuntil";
 const string KW_UNTIL="until";
 const string KW_THEN="then";
 const string KW_THIS="this";
+//////////////////////////////////
 const string KW_DIGIT="digit";
 const string KW_DECIMAL="decimal";
 const string KW_DOUBLE="double";
+const string KW_CHAR = "char";
+const string KW_VACCANT="vaccant";
+const string KW_STRING ="string";
+//////////////////////////////////
 const string KW_CHOICE="choice";
 const string KW_GLOBAL="global";
+//////////////////////////////////
 const string KW_OUTPUT="output";
 const string KW_INPUT="input";
+//////////////////////////////////
 const string KW_RETURN="return";
 const string KW_BOOLEAN="boolean";
 const string KW_BYDEFAULT="bydefault";
-const string KW_VACCANT="vaccant";
 const string KW_EMPTY="empty";
 const string KW_SELECT="select";
+const string KW_FUNCTION ="function";
 
 const string KEYWORD = "KEYWORD";
 const string IDENTIFIER = "IDENTIFIER";
@@ -49,6 +56,10 @@ const string NUMBER = "NUMBER";
 const string OPERATOR = "OPERATOR";
 const string SYMBOL = "SYMBOL";
 const string STRING = "STRING";
-const string CHAR = "CHAR";
+const string FUNCTION = "FUNCTION";
+const string INPUT = "INPUT";
+const string OUTPUT = "OUTPUT";
+// const string CHAR = "CHAR";
+const string DATATYPE = "DATATYPE";
 
 #endif
