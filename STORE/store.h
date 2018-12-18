@@ -16,6 +16,7 @@ class STORE {
         bool ifExist(string) ;
         bool insert(string,string);
         void print();
+        string ifType(string);
 };
 
 #endif

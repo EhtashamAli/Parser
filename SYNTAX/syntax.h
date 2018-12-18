@@ -26,6 +26,7 @@ class PARSER {
         bool STATEMENT();
         bool ASSIGNMENT_STATEMENT();
         bool DECLARATION_STATEMENT();
+        bool EXP_DECLARATION_STATEMENT();
         bool INC_DEC_STATEMENT();
         TOKEN peekToken();
         //EXPRESSION

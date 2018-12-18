@@ -1,7 +1,9 @@
 #include "./store.h"
 
 bool STORE::ifExist(string el) {
+    // cout<<this->declarations.find(el)->second<<endl;
     this->IT = this->declarations.find(el);
+    // cout<<IT->second<<endl;
     if(this->IT == this->declarations.end()){
         return false;
     } else {
@@ -17,8 +19,16 @@ bool STORE::insert(string key , string val){
         return true;
     }  
 }
-
 void STORE::print(){
      for (IT=declarations.begin(); IT!=declarations.end(); ++IT)
-    std::cout << IT->first << " => " << IT->second << '\n';
+    std::cout <<"| "<<IT->first <<" | "<< " => " <<"| " <<IT->second <<" |"<< '\n';
+}
+
+string STORE::ifType(string el){
+    this->IT = this->declarations.find(el);
+    if(this->IT == this->declarations.end()){
+        return "";
+    } else {
+        return this->IT->second;
+    }
 }

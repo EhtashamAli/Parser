@@ -76,36 +76,104 @@ bool PARSER::MAIN(){
             (back_track() && true);
 }
 bool PARSER::STATEMENT(){
-    return (save_cursor() && DECLARATION_STATEMENT() && STATEMENT()) ||
-           (back_track() && save_cursor() && ASSIGNMENT_STATEMENT() && STATEMENT()) ||
-           (back_track() && save_cursor() && FUNCTION_STATEMENT() && STATEMENT()) ||
-           (back_track() && save_cursor() && INC_DEC_STATEMENT() && STATEMENT()) ||
-           (back_track() && save_cursor() && IF_STATEMENT() && STATEMENT()) ||
-           (back_track() && save_cursor() && ITERATION_STATEMENT() && STATEMENT()) ||
-           (back_track() && save_cursor() && INPUT_STATEMENTS() && STATEMENT()) ||
-           (back_track() && save_cursor() && OUTPUT_STATEMENTS() && STATEMENT()) ||
-           (back_track() && true);
+    return  (save_cursor() && FUNCTION_STATEMENT() && STATEMENT()) ||
+            (back_track() && save_cursor() && DECLARATION_STATEMENT() && STATEMENT()) ||
+            (back_track() && save_cursor() && FUNCTION_STATEMENT() && STATEMENT()) ||
+            (back_track() && save_cursor() && ASSIGNMENT_STATEMENT() && STATEMENT()) ||
+            (back_track() && save_cursor() && INC_DEC_STATEMENT() && STATEMENT()) ||
+            (back_track() && save_cursor() && IF_STATEMENT() && STATEMENT()) ||
+            (back_track() && save_cursor() && ITERATION_STATEMENT() && STATEMENT()) ||
+            (back_track() && save_cursor() && INPUT_STATEMENTS() && STATEMENT()) ||
+            (back_track() && save_cursor() && OUTPUT_STATEMENTS() && STATEMENT()) ||
+            (back_track() && true);
 }
 bool PARSER::INPUT_STATEMENTS(){
-    return (TERM_TYPE(INPUT) && TERM(":") && TERM_TYPE(IDENTIFIER));
+    // return (TERM_TYPE(INPUT) && TERM(":") && TERM_TYPE(IDENTIFIER));
+    if(TERM_TYPE(INPUT) && TERM(":") && TERM_TYPE(IDENTIFIER)){
+        back_track();save_cursor();
+        getNextToken();
+        getNextToken();
+        string toCheck = getNextToken().lexeme;
+        if(s.ifExist(toCheck)){
+            // cout<<"exist1  "<<toCheck<<endl;
+        }else{
+            cout<<"\t SEMANTIC ERROR :"<<toCheck<<" not declared"<<endl;
+        }
+        return true;
+    }
+    return false;
 }
 
 bool PARSER::OUTPUT_STATEMENTS(){
     return (TERM_TYPE(OUTPUT) && OUTPUTS());
 }
 bool PARSER::OUTPUTS(){
-            return (save_cursor() && TERM(":") && TERM_TYPE(IDENTIFIER) && OUTPUTS()) ||
-            (back_track() && save_cursor() && TERM(":") && TERM_TYPE(STRING) && OUTPUTS()) ||
-            (back_track() && true);
+            // return (save_cursor() && TERM(":") && TERM_TYPE(IDENTIFIER) && OUTPUTS()) ||
+            // (back_track() && save_cursor() && TERM(":") && TERM_TYPE(STRING) && OUTPUTS()) ||
+            // (back_track() && true);
+            if(save_cursor() && TERM(":") && TERM_TYPE(IDENTIFIER)){
+                back_track();save_cursor();
+                getNextToken();
+                string toCheck = getNextToken().lexeme;
+                // cout<<s.ifType(toCheck)<<endl;
+                if(s.ifExist(toCheck)){
+                    // cout<<"exist1  "<<toCheck<<endl;
+                }else{
+                    cout<<"\t SEMANTIC ERROR :"<<toCheck<<" not declared"<<endl;
+                }
+                OUTPUTS();
+                return true;
+            }
+            if(back_track() && save_cursor() && TERM(":") && TERM_TYPE(STRING) && OUTPUTS()){
+                return true;
+            }
+            if(back_track() && true){
+                return true;
+            }
+            return false;
 }
 bool PARSER::FUNCTION_STATEMENT(){
-      return (TERM_TYPE(DATATYPE) && TERM_TYPE(FUNCTION) && TERM_TYPE(IDENTIFIER) && TERM("(") && PARAMETERS() && TERM(")") && TERM("{") && STATEMENT() && TERM("}"));
+    //   return (TERM_TYPE(DATATYPE) && TERM_TYPE(FUNCTION) && TERM_TYPE(IDENTIFIER) && TERM("(") && PARAMETERS() && TERM(")") && TERM("{") && STATEMENT() && TERM("}"));
+    if(TERM_TYPE(DATATYPE) && TERM_TYPE(FUNCTION) && TERM_TYPE(IDENTIFIER)){
+        back_track() && save_cursor();
+        getNextToken();getNextToken();
+        string key = getNextToken().lexeme;
+        if(s.ifExist(key)){
+            cout<<"\t SEMANTIC error:  "<<key<<"  already declared"<<endl;
+        }else{
+           s.insert(key,"function");
+        }
+        if(TERM("(") && PARAMETERS() && TERM(")") && TERM("{") && STATEMENT() && TERM("}")){
+            return true;
+        }
+    }
+    return false;
 }
 
 bool PARSER::PARAMETERS(){
-    return  (save_cursor() && TERM_TYPE(DATATYPE) && TERM_TYPE(IDENTIFIER) && PARAMETERS()) ||
-            (back_track() && save_cursor() && TERM(",") && PARAMETERS()) ||
-            (back_track() && true);
+    // return  (save_cursor() && TERM_TYPE(DATATYPE) && TERM_TYPE(IDENTIFIER) && PARAMETERS()) ||
+    //         (back_track() && save_cursor() && TERM(",") && PARAMETERS()) ||
+    //         (back_track() && true);
+    if(save_cursor() && TERM_TYPE(DATATYPE) && TERM_TYPE(IDENTIFIER)){
+        back_track();save_cursor();
+        string var = getNextToken().lexeme;
+        string key = getNextToken().lexeme;
+        // cout<<var<<endl;
+        if(s.ifExist(key)){
+            cout<<"\t SEMANTIC error:  "<<key<<"  already declared"<<endl;
+        }else{
+           s.insert(key,var);;
+        }
+        PARAMETERS();
+        return true;
+    }
+    if(back_track() && save_cursor() && TERM(",") && PARAMETERS()){
+        return true;
+    }
+    if(back_track() && true){
+        return true;
+    }
+    return false;
 }
 bool PARSER::DECLARATION_STATEMENT(){
     // return  (save_cursor() && TERM_TYPE(KEYWORD) && TERM_TYPE(IDENTIFIER) && TERM("=") && EXPRESSION()) ||
@@ -115,7 +183,7 @@ bool PARSER::DECLARATION_STATEMENT(){
         string var = getNextToken().lexeme;
         string key = getNextToken().lexeme;
         if(s.ifExist(key)){
-            cout<<"symantic error:  "<<key<<"  already declared"<<endl;
+            cout<<"\t SEMANTIC error:  "<<key<<"  already declared"<<endl;
         }else{
            s.insert(key,var);;
         }
@@ -140,25 +208,26 @@ bool PARSER::DECLARATION_STATEMENT(){
         getNextToken();
         string toCheck = getNextToken().lexeme;
         if(s.ifExist(toCheck)){
-            cout<<"exist1  "<<toCheck<<endl;
-            return true; 
+            // cout<<"exist1  "<<toCheck<<endl;
+            // return true; 
         }else{
-            cout<<"SEMANTIC ERROR :"<<toCheck<<" not declared"<<endl;
-            return true;
+            cout<<"\t SEMANTIC ERROR :"<<toCheck<<" not declared"<<endl;
+            // return true;
         }
         return true;
     }   
     return false;  
 }
+
 bool PARSER::ASSIGNMENT_STATEMENT(){
     // return (TERM_TYPE(IDENTIFIER) && TERM("=") && EXPRESSION());
     if(save_cursor() && TERM_TYPE(IDENTIFIER) && TERM("=")){
         back_track();save_cursor();
         string key = getNextToken().lexeme;
         if(s.ifExist(key)){
-            cout<<"exist2  "<<key<<endl; 
+            // cout<<"exist2  "<<key<<endl; 
         }else{
-            cout<<"SEMANTIC ERROR :"<<key<<" not declared"<<endl;
+            cout<<"\t SEMANTIC ERROR :"<<key<<" not declared"<<endl;
         }
         getNextToken();
         if(EXPRESSION()){
@@ -200,16 +269,16 @@ bool PARSER::FACTOR(){
         back_track();save_cursor();
         string var = getNextToken().lexeme;
         if(s.ifExist(var)){
-            cout<<"exist  "<<var<<endl;
-            return true; 
+            // cout<<"exist  "<<var<<endl;
+            // return true; 
         }else{
             cout<<"SEMANTIC ERROR :"<<var<<" not declared"<<endl;
-            return true;
+            // return true;
         }
     }
     if(back_track() && save_cursor() && TERM_TYPE(NUMBER)){
         return true;
-    }
+}
 }
 
 // inc_dec_Statement -> pre_inc |
@@ -223,16 +292,76 @@ bool PARSER::INC_DEC_STATEMENT(){
             (back_track() & save_cursor() && post_inc());
 }
 bool PARSER::pre_inc(){
-    return (TERM("+") && TERM("+") && TERM_TYPE(IDENTIFIER));
+    // return (TERM("+") && TERM("+") && TERM_TYPE(IDENTIFIER));
+    if(TERM("+") && TERM("+") && TERM_TYPE(IDENTIFIER)){
+        back_track();save_cursor();
+        getNextToken();
+        getNextToken();
+        string var = getNextToken().lexeme;
+        if(s.ifExist(var)){
+            // cout<<"exist  "<<var<<endl;
+            // return true; 
+        }else{
+            cout<<"\t SEMANTIC ERROR :"<<var<<" not declared"<<endl;
+            // return true;
+        }
+        return true;
+    }
+    return false;
 }
 bool PARSER::pre_dec(){
-    return (TERM("-") && TERM("-") && TERM_TYPE(IDENTIFIER));
+    // return (TERM("-") && TERM("-") && TERM_TYPE(IDENTIFIER));
+    if(TERM("-") && TERM("-") && TERM_TYPE(IDENTIFIER)){
+        back_track();save_cursor();
+        getNextToken();
+        getNextToken();
+        string var = getNextToken().lexeme;
+        if(s.ifExist(var)){
+            // cout<<"exist  "<<var<<endl;
+            // return true; 
+        }else{
+            cout<<"\t SEMANTIC ERROR :"<<var<<" not declared"<<endl;
+            // return true;
+        }
+        return true;
+    }
+    return false;
 }
 bool PARSER::post_dec(){
-    return (TERM_TYPE(IDENTIFIER) && TERM("-") && TERM("-"));
+    // return (TERM_TYPE(IDENTIFIER) && TERM("-") && TERM("-"));
+    if(TERM_TYPE(IDENTIFIER) && TERM("-") && TERM("-")){
+        back_track();save_cursor();
+        string var = getNextToken().lexeme;
+        if(s.ifExist(var)){
+            // cout<<"exist  "<<var<<endl;
+            // return true; 
+        }else{
+            cout<<"\t SEMANTIC ERROR :"<<var<<" not declared"<<endl;
+            // return true;
+        }
+        getNextToken();
+        getNextToken();
+        return true;
+    }
+    return false;
 }
 bool PARSER::post_inc(){
-    return (TERM_TYPE(IDENTIFIER) && TERM("+") && TERM("+"));
+    // return (TERM_TYPE(IDENTIFIER) && TERM("+") && TERM("+"));
+    if(TERM_TYPE(IDENTIFIER) && TERM("+") && TERM("+")){
+        back_track();save_cursor();
+        string var = getNextToken().lexeme;
+        if(s.ifExist(var)){
+            // cout<<"exist  "<<var<<endl;
+            // return true; 
+        }else{
+            cout<<"\t SEMANTIC ERROR :"<<var<<" not declared"<<endl;
+            // return true;
+        }
+        getNextToken();
+        getNextToken();
+        return true;
+    }
+    return false;
 }
 
 // statement → if (E) matched optional-tail | other
@@ -263,9 +392,25 @@ bool PARSER::CONDITION(){
            (back_track() && save_cursor() && NE_OP());
 }
 bool PARSER::TYPE(){
-    return
-            (save_cursor() && TERM_TYPE(IDENTIFIER)) ||
-            (back_track() && save_cursor() && TERM_TYPE(NUMBER));
+    // return
+    //         (save_cursor() && TERM_TYPE(IDENTIFIER)) ||
+    //         (back_track() && save_cursor() && TERM_TYPE(NUMBER));
+    if(save_cursor() && TERM_TYPE(IDENTIFIER)){
+        back_track(); save_cursor();
+        string var = getNextToken().lexeme;
+        if(s.ifExist(var)){
+            // cout<<"exist  "<<var<<endl;
+            // return true; 
+        }else{
+            cout<<"\t SEMANTIC ERROR :"<<var<<" not declared"<<" under line no: "<<lineCount<<endl;
+            // return true;
+        }
+        return true;
+    }
+    if(back_track() && save_cursor() && TERM_TYPE(NUMBER)){
+        return true;
+    }
+    return false;
 }
 bool PARSER::LT_OP(){
     return (TYPE() && TERM("<") && TYPE());
