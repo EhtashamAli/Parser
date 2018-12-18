@@ -4,17 +4,30 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 #include "../TOKEN/token.h"
-#include "../STORE/store.h"
+#include "../STORE/quadruple.cpp"
 
 using namespace std;
 
 class PARSER {
     private:
-        STORE s;
+        // STORE s;
         int CURSOR = 0;
         int SAVED_CURSOR = 0;
+        int POINTER = 0;
         vector<TOKEN> TOKENS;
+        ////////////////////////////////
+        map<string, string> declarations;
+        map<string, string>::iterator IT;
+        pair<map<string, string>::iterator,bool> ret;
+        bool ifExist(string) ;
+        bool insert(string,string);
+        void print();
+        void printQuad();
+        string ifType(string);
+        vector <QUADRUPLE> QUADRUPLES;
+        ///////////////////////////////
         string LAST_EXPECTED = "";
         string LAST_EXPECTED_TYPE = "";
         bool save_cursor();

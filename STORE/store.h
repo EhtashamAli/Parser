@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <map> 
+#include "./quadruple.cpp"
 using namespace std;
 class STORE {
     private:
@@ -17,6 +18,11 @@ class STORE {
         bool insert(string,string);
         void print();
         string ifType(string);
+        int POINTER = 0;
+        vector <QUADRUPLE> QUADRUPLES;
 };
+
+
+
 
 #endif

@@ -1,15 +1,56 @@
 #include "./syntax.h"
 #include "../KEYWORDS/KEYWORDS.h"
-#include "../STORE/store.cpp"
+// #include "../STORE/store.cpp"
 #include <sstream> 
 int lineCount = 0;
 
+////////////////////////SEMANTIC//////////////////////////////
+bool PARSER::ifExist(string el) {
+    // cout<<this->declarations.find(el)->second<<endl;
+    this->IT = this->declarations.find(el);
+    // cout<<IT->second<<endl;
+    if(this->IT == this->declarations.end()){
+        return false;
+    } else {
+        return true;
+    }
+}
+bool PARSER::insert(string key , string val){
+    this->ret = this->declarations.insert (pair<string,string>(key,val));
+    if (ret.second==false) {
+        cout << "element " << key <<" already existed"<<endl;
+        return false;
+    } else {
+        return true;
+    }  
+}
+void PARSER::print(){
+     for (IT=declarations.begin(); IT!=declarations.end(); ++IT)
+    std::cout <<"| "<<IT->first <<" | "<< " => " <<"| " <<IT->second <<" |"<< '\n';
+}
+
+void PARSER::printQuad(){
+    int iter;
+    for (vector<QUADRUPLE>::const_iterator iter = QUADRUPLES.begin();
+         iter != QUADRUPLES.end(); ++iter)
+            std::cout << iter->op << "\t" << iter->arg1<< "\t" << iter->arg2<< "\t" << iter->target<< "\t" << endl;
+}
+string PARSER::ifType(string el){
+    this->IT = this->declarations.find(el);
+    if(this->IT == this->declarations.end()){
+        return "";
+    } else {
+        return this->IT->second;
+    }
+}
+/////////////////////////////////////////////////////////////////////////////
 void PARSER::PARSE(vector<TOKEN> tokens){
     this->CURSOR = 0;
     this->SAVED_CURSOR = 0;
     this->TOKENS = tokens;
     if(this->MAIN() && CURSOR == this->TOKENS.size()){
-        s.print();
+        this->print();
+        this->printQuad();
         cout<<"PARSING SUCCESSFUL"<<endl;
     } else {
         cout<<"PARSING FAILED on line:" <<lineCount+2<<" "<<LAST_EXPECTED<<" "<<LAST_EXPECTED_TYPE<<endl;
@@ -94,7 +135,7 @@ bool PARSER::INPUT_STATEMENTS(){
         getNextToken();
         getNextToken();
         string toCheck = getNextToken().lexeme;
-        if(s.ifExist(toCheck)){
+        if(this->ifExist(toCheck)){
             // cout<<"exist1  "<<toCheck<<endl;
         }else{
             cout<<"\t SEMANTIC ERROR :"<<toCheck<<" not declared"<<endl;
@@ -116,7 +157,7 @@ bool PARSER::OUTPUTS(){
                 getNextToken();
                 string toCheck = getNextToken().lexeme;
                 // cout<<s.ifType(toCheck)<<endl;
-                if(s.ifExist(toCheck)){
+                if(this->ifExist(toCheck)){
                     // cout<<"exist1  "<<toCheck<<endl;
                 }else{
                     cout<<"\t SEMANTIC ERROR :"<<toCheck<<" not declared"<<endl;
@@ -138,10 +179,10 @@ bool PARSER::FUNCTION_STATEMENT(){
         back_track() && save_cursor();
         getNextToken();getNextToken();
         string key = getNextToken().lexeme;
-        if(s.ifExist(key)){
+        if(this->ifExist(key)){
             cout<<"\t SEMANTIC error:  "<<key<<"  already declared"<<endl;
         }else{
-           s.insert(key,"function");
+           this->insert(key,"function");
         }
         if(TERM("(") && PARAMETERS() && TERM(")") && TERM("{") && STATEMENT() && TERM("}")){
             return true;
@@ -159,10 +200,10 @@ bool PARSER::PARAMETERS(){
         string var = getNextToken().lexeme;
         string key = getNextToken().lexeme;
         // cout<<var<<endl;
-        if(s.ifExist(key)){
+        if(this->ifExist(key)){
             cout<<"\t SEMANTIC error:  "<<key<<"  already declared"<<endl;
         }else{
-           s.insert(key,var);;
+           this->insert(key,var);;
         }
         PARAMETERS();
         return true;
@@ -182,10 +223,10 @@ bool PARSER::DECLARATION_STATEMENT(){
         back_track();save_cursor();
         string var = getNextToken().lexeme;
         string key = getNextToken().lexeme;
-        if(s.ifExist(key)){
+        if(this->ifExist(key)){
             cout<<"\t SEMANTIC error:  "<<key<<"  already declared"<<endl;
         }else{
-           s.insert(key,var);;
+           this->insert(key,var);;
         }
         getNextToken();
         if(EXPRESSION()){
@@ -200,14 +241,14 @@ bool PARSER::DECLARATION_STATEMENT(){
         back_track();save_cursor();
         string var = getNextToken().lexeme;
         string key = getNextToken().lexeme;
-        if(s.ifExist(key)){
+        if(this->ifExist(key)){
             cout<<"symantic error:  "<<key<<"  already declared"<<endl;
         }else{
-            s.insert(key,var);
+            this->insert(key,var);
         }
         getNextToken();
         string toCheck = getNextToken().lexeme;
-        if(s.ifExist(toCheck)){
+        if(this->ifExist(toCheck)){
             // cout<<"exist1  "<<toCheck<<endl;
             // return true; 
         }else{
@@ -224,7 +265,7 @@ bool PARSER::ASSIGNMENT_STATEMENT(){
     if(save_cursor() && TERM_TYPE(IDENTIFIER) && TERM("=")){
         back_track();save_cursor();
         string key = getNextToken().lexeme;
-        if(s.ifExist(key)){
+        if(this->ifExist(key)){
             // cout<<"exist2  "<<key<<endl; 
         }else{
             cout<<"\t SEMANTIC ERROR :"<<key<<" not declared"<<endl;
@@ -246,17 +287,134 @@ bool PARSER::EXPRESSION(){
     return (TERM() && EXPRESSION1());
 }
 bool PARSER::EXPRESSION1(){
-    return  (save_cursor() && TERM("+") && TERM() && EXPRESSION1()) ||
-            (back_track() && save_cursor() && TERM("-") && TERM() && EXPRESSION1()) ||
-            (back_track() && true);
+    // return  (save_cursor() && TERM("+") && TERM() && EXPRESSION1()) ||
+    //         (back_track() && save_cursor() && TERM("-") && TERM() && EXPRESSION1()) ||
+    //         (back_track() && true);
+    if(save_cursor() && TERM("+")){
+        string op = "";
+        string ar1 = "";
+        string ar2 = "";
+        string tar = "";
+        // back_track(); save_cursor();
+        // op = getNextToken().lexeme;
+        // cout << op << endl;
+        // ar1 = getNextToken().lexeme;
+        // QUADRUPLE Q =  QUADRUPLE(op , ar1 , "NA" , "TARGETPLUS");
+        // this->QUADRUPLES.push_back(Q);
+        // back_track(); save_cursor();
+        // getNextToken();
+         back_track(); save_cursor();
+        string last = "";
+        // back_track(); save_cursor();
+        // string arg1 = getNextToken().lexeme;
+        op = getNextToken().lexeme;
+        cout << op << endl;
+        string arg2 = getNextToken().lexeme;
+        if (!QUADRUPLES.empty())
+                 last = QUADRUPLES.back().target;
+        QUADRUPLE Q =  QUADRUPLE(op , arg2  , last , "TARGETplus");
+        this->QUADRUPLES.push_back(Q);
+        back_track(); save_cursor();
+        getNextToken();
+        if(TERM() && EXPRESSION1()){
+            return true; 
+        }
+        return false;
+    }
+    if(back_track() && save_cursor() && TERM("-")){
+        string op = "";
+        string ar1 = "";
+        string ar2 = "";
+        string tar = "";
+        // back_track(); save_cursor();
+        // op = getNextToken().lexeme;
+        // cout << op << endl;
+        // string ar1 = getNextToken().lexeme;
+        // QUADRUPLE Q =  QUADRUPLE(op , ar1 , "NA" , "TARGETMINUS");
+        // this->QUADRUPLES.push_back(Q);
+        // back_track(); save_cursor();
+        // getNextToken();
+         back_track(); save_cursor();
+        string last = "";
+        // back_track(); save_cursor();
+        // string arg1 = getNextToken().lexeme;
+        op = getNextToken().lexeme;
+        cout << op << endl;
+        string arg2 = getNextToken().lexeme;
+        if (!QUADRUPLES.empty())
+                 last = QUADRUPLES.back().target;
+        QUADRUPLE Q =  QUADRUPLE(op , last  , arg2 , "TARGETMinus");
+        this->QUADRUPLES.push_back(Q);
+        back_track(); save_cursor();
+        getNextToken();
+        if(TERM() && EXPRESSION1()){
+            return true;
+        }
+        return false;
+    }
+    if(back_track() && true){
+        return true;
+    }
+    return false;
 }
 bool PARSER::TERM(){
     return (FACTOR() && TERM1());
 }
 bool PARSER::TERM1(){
-    return  (save_cursor() && TERM("*") && FACTOR() && TERM1()) ||
-            (back_track() && save_cursor() && TERM("/") && FACTOR() && TERM1()) ||
-            (back_track() && true);
+    // return  (save_cursor() && TERM("*") && FACTOR() && TERM1()) ||
+    //         (back_track() && save_cursor() && TERM("/") && FACTOR() && TERM1()) ||
+    //         (back_track() && true);
+    if(save_cursor() && TERM("*")){
+        string op = "";
+        string ar1 = "";
+        string ar2 = "";
+        string tar = "";
+        back_track(); save_cursor();
+        string last = "";
+        // back_track(); save_cursor();
+        // string arg1 = getNextToken().lexeme;
+        op = getNextToken().lexeme;
+        cout << op << endl;
+        string arg2 = getNextToken().lexeme;
+        if (!QUADRUPLES.empty())
+                 last = QUADRUPLES.back().target;
+        QUADRUPLE Q =  QUADRUPLE(op , arg2  , last , "TARGETMul");
+        this->QUADRUPLES.push_back(Q);
+        back_track(); save_cursor();
+        getNextToken();
+        if(FACTOR() && TERM1()){
+            return true;
+        }
+        return false;
+    }
+    if(back_track() && save_cursor() && TERM("/")){
+        back_track(); save_cursor();
+        string op = "";
+        string ar1 = "";
+        string ar2 = "";
+        string tar = "";
+        string last = "";
+        // back_track(); save_cursor();
+        // string arg1 = getNextToken().lexeme;
+        op = getNextToken().lexeme;
+        cout << op << endl;
+        string arg2 = getNextToken().lexeme;
+        if (!QUADRUPLES.empty())
+                 last = QUADRUPLES.back().target;
+        QUADRUPLE Q =  QUADRUPLE(op , last  , arg2 , "TARGETdiv");
+        this->QUADRUPLES.push_back(Q);
+        back_track(); save_cursor();
+        getNextToken();
+        if(FACTOR() && TERM1()){
+            return true;
+        }
+        return false;
+    }
+    if(back_track() && true){
+
+        return true;
+    }
+    return false;
 }
 bool PARSER::FACTOR(){
     // return  (save_cursor() && TERM("(") && EXPRESSION() && TERM(")")) ||
@@ -266,19 +424,47 @@ bool PARSER::FACTOR(){
         return true;
     }
     if(back_track() && save_cursor() && TERM_TYPE(IDENTIFIER)){
+        string op = "";
+        string ar1 = "";
+        string ar2 = "";
+        string tar = "";
+        string last = "";
+        string LASToP = "";
         back_track();save_cursor();
         string var = getNextToken().lexeme;
-        if(s.ifExist(var)){
+
+
+        op = getNextToken().lexeme;
+        back_track();save_cursor();
+        getNextToken();
+        if(op == "+" || op == "-" || op == "/" || op == "*"){
+            if (!QUADRUPLES.empty())
+                 last = QUADRUPLES.back().target;
+            QUADRUPLE Q =  QUADRUPLE("NA" , var , last , "OP"+op);
+            this->QUADRUPLES.push_back(Q);   
+        }
+
+
+        // if(op == "}" && op != "*" && op != "/"){
+        //     if (!QUADRUPLES.empty())
+        //          last = QUADRUPLES.back().target;
+        //          LASToP =  QUADRUPLES.back().op;
+        //     QUADRUPLE Q =  QUADRUPLE(LASToP , var , last , "OP");
+        //     this->QUADRUPLES.push_back(Q);   
+        // }
+        if(this->ifExist(var)){
             // cout<<"exist  "<<var<<endl;
             // return true; 
         }else{
             cout<<"SEMANTIC ERROR :"<<var<<" not declared"<<endl;
             // return true;
         }
+        return true;
     }
     if(back_track() && save_cursor() && TERM_TYPE(NUMBER)){
         return true;
 }
+    // return false;
 }
 
 // inc_dec_Statement -> pre_inc |
@@ -298,7 +484,7 @@ bool PARSER::pre_inc(){
         getNextToken();
         getNextToken();
         string var = getNextToken().lexeme;
-        if(s.ifExist(var)){
+        if(this->ifExist(var)){
             // cout<<"exist  "<<var<<endl;
             // return true; 
         }else{
@@ -316,7 +502,7 @@ bool PARSER::pre_dec(){
         getNextToken();
         getNextToken();
         string var = getNextToken().lexeme;
-        if(s.ifExist(var)){
+        if(this->ifExist(var)){
             // cout<<"exist  "<<var<<endl;
             // return true; 
         }else{
@@ -332,7 +518,7 @@ bool PARSER::post_dec(){
     if(TERM_TYPE(IDENTIFIER) && TERM("-") && TERM("-")){
         back_track();save_cursor();
         string var = getNextToken().lexeme;
-        if(s.ifExist(var)){
+        if(this->ifExist(var)){
             // cout<<"exist  "<<var<<endl;
             // return true; 
         }else{
@@ -350,7 +536,7 @@ bool PARSER::post_inc(){
     if(TERM_TYPE(IDENTIFIER) && TERM("+") && TERM("+")){
         back_track();save_cursor();
         string var = getNextToken().lexeme;
-        if(s.ifExist(var)){
+        if(this->ifExist(var)){
             // cout<<"exist  "<<var<<endl;
             // return true; 
         }else{
@@ -398,7 +584,7 @@ bool PARSER::TYPE(){
     if(save_cursor() && TERM_TYPE(IDENTIFIER)){
         back_track(); save_cursor();
         string var = getNextToken().lexeme;
-        if(s.ifExist(var)){
+        if(this->ifExist(var)){
             // cout<<"exist  "<<var<<endl;
             // return true; 
         }else{
