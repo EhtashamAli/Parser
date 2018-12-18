@@ -4,6 +4,7 @@
 #include <sstream> 
 int lineCount = 0;
 
+bool flag = true;
 ////////////////////////SEMANTIC//////////////////////////////
 bool PARSER::ifExist(string el) {
     // cout<<this->declarations.find(el)->second<<endl;
@@ -30,10 +31,15 @@ void PARSER::print(){
 }
 
 void PARSER::printQuad(){
+    fstream quad;
+    quad.open("../OUTPUT.efh", ios::out);
     int iter;
     for (vector<QUADRUPLE>::const_iterator iter = QUADRUPLES.begin();
-         iter != QUADRUPLES.end(); ++iter)
-            std::cout << iter->op << "\t" << iter->arg1<< "\t" << iter->arg2<< "\t" << iter->target<< "\t" << endl;
+         iter != QUADRUPLES.end(); ++iter){
+             std::cout << iter->op << "\t" << iter->arg1<< "\t" << iter->arg2<< "\t" << iter->target<< "\t" << endl;
+              quad<<iter->target<< "\t      " <<"=\t         " <<  iter->arg1<< "      \t" <<iter->op << "    \t" << iter->arg2<< "      \t" <<  endl;
+         }
+            
 }
 string PARSER::ifType(string el){
     this->IT = this->declarations.find(el);
@@ -432,19 +438,26 @@ bool PARSER::FACTOR(){
         string LASToP = "";
         back_track();save_cursor();
         string var = getNextToken().lexeme;
-
-
         op = getNextToken().lexeme;
         back_track();save_cursor();
-        getNextToken();
-        if(op == "+" || op == "-" || op == "/" || op == "*"){
-            if (!QUADRUPLES.empty())
-                 last = QUADRUPLES.back().target;
-            QUADRUPLE Q =  QUADRUPLE("NA" , var , last , "OP"+op);
-            this->QUADRUPLES.push_back(Q);   
+        TERM_TYPE(IDENTIFIER);
+            if(op == "+" || op == "-" || op == "/" ){
+                // if (!QUADRUPLES.empty())
+                //      last = QUADRUPLES.back().target;
+                QUADRUPLE Q =  QUADRUPLE("" , var , "" , var+"1");
+                this->QUADRUPLES.push_back(Q);   
+            }
+        if (!QUADRUPLES.empty())
+                     last = QUADRUPLES.back().arg2;
+        if (!QUADRUPLES.empty())
+                     LASToP = QUADRUPLES.back().arg1;
+        if(!TERM_TYPE(OPERATOR) && last != var && LASToP != var){
+            QUADRUPLE Q =  QUADRUPLE("" , var , "" , "var"+var);
+            this->QUADRUPLES.push_back(Q);  
         }
-
-
+        back_track();save_cursor();
+        getNextToken();
+        
         // if(op == "}" && op != "*" && op != "/"){
         //     if (!QUADRUPLES.empty())
         //          last = QUADRUPLES.back().target;
@@ -461,7 +474,33 @@ bool PARSER::FACTOR(){
         }
         return true;
     }
-    if(back_track() && save_cursor() && TERM_TYPE(NUMBER)){
+    if(back_track() && save_cursor() && TERM_TYPE(DIGIT)){
+        back_track();save_cursor();
+        string val = getNextToken().lexeme;
+        // string next = getNextToken().lexeme;
+        
+        if(!TERM_TYPE(OPERATOR)){
+            QUADRUPLE Q =  QUADRUPLE("" , val , "" , "var"+val);
+            this->QUADRUPLES.push_back(Q);  
+        }
+        back_track();save_cursor();
+        getNextToken();
+               
+        return true;
+}
+
+    if(back_track() && save_cursor() && TERM_TYPE(FLOAT)){
+        back_track();save_cursor();
+        string val = getNextToken().lexeme;
+        // string next = getNextToken().lexeme;
+        
+        if(!TERM_TYPE(OPERATOR)){
+            QUADRUPLE Q =  QUADRUPLE("" , val , "" , "var"+(val.size()%2));
+            this->QUADRUPLES.push_back(Q);  
+        }
+        back_track();save_cursor();
+        getNextToken();
+               
         return true;
 }
     // return false;

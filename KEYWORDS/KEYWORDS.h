@@ -53,12 +53,14 @@ const string KW_FUNCTION ="function";
 const string KEYWORD = "KEYWORD";
 const string IDENTIFIER = "IDENTIFIER";
 const string NUMBER = "NUMBER";
+const string DIGIT = "DIGIT";
 const string OPERATOR = "OPERATOR";
 const string SYMBOL = "SYMBOL";
 const string STRING = "STRING";
 const string FUNCTION = "FUNCTION";
 const string INPUT = "INPUT";
 const string OUTPUT = "OUTPUT";
+const string FLOAT = "FLOAT";
 // const string CHAR = "CHAR";
 const string DATATYPE = "DATATYPE";
 
