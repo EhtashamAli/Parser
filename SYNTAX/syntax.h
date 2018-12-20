@@ -7,6 +7,7 @@
 #include <map>
 #include "../TOKEN/token.h"
 #include "../STORE/quadruple.cpp"
+#include "../STORE/temps.cpp"
 
 using namespace std;
 
@@ -16,17 +17,46 @@ class PARSER {
         int CURSOR = 0;
         int SAVED_CURSOR = 0;
         int POINTER = 0;
+        int LABEL = 0;
+        int TARGET = 0;
+        int TEMP = 0;
+        ////////////////////////////////
+        vector <QUADRUPLE> QUADRUPLES;
         vector<TOKEN> TOKENS;
+        vector<string> LABELS;
+        vector<TEMPS> V_TEMP;
         ////////////////////////////////
         map<string, string> declarations;
         map<string, string>::iterator IT;
         pair<map<string, string>::iterator,bool> ret;
+        /////////////////////////////////
+        string getTemp(string key){
+            for(int i = 0 ; i < this->V_TEMP.size() ; i++){
+                if(V_TEMP[i].id == key){
+                    return V_TEMP[i].temp;
+                }
+            }
+        }
+        string genLabel(){
+            string val = "_LABEL"+to_string(this->LABEL);
+            this->LABEL++;
+            return val;
+        }
+        string genTarget(){
+            string val = "_T"+to_string(this->TARGET);
+            this->TARGET++;
+            return val;
+        }
+        string genTemp(){
+            string val = "_t"+to_string(this->TEMP);
+            this->TEMP++;
+            return val;
+        }
         bool ifExist(string) ;
         bool insert(string,string);
         void print();
         void printQuad();
         string ifType(string);
-        vector <QUADRUPLE> QUADRUPLES;
         ///////////////////////////////
         string LAST_EXPECTED = "";
         string LAST_EXPECTED_TYPE = "";
@@ -79,6 +109,8 @@ class PARSER {
         /////////////////////////
         bool FUNCTION_STATEMENT();
         bool PARAMETERS();
+        bool FUNCTION_CALL();
+        bool ARGUMENTS();
         /////////////////////////
         bool INPUT_STATEMENTS();
         bool OUTPUT_STATEMENTS();
