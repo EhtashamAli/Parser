@@ -6,7 +6,7 @@
 #include <vector>
 #include <map>
 #include "../TOKEN/token.h"
-#include "../STORE/quadruple.cpp"
+#include "../STORE/quadruple.h"
 #include "../STORE/temps.cpp"
 
 using namespace std;
@@ -24,19 +24,12 @@ class PARSER {
         vector <QUADRUPLE> QUADRUPLES;
         vector<TOKEN> TOKENS;
         vector<string> LABELS;
-        vector<TEMPS> V_TEMP;
         ////////////////////////////////
         map<string, string> declarations;
         map<string, string>::iterator IT;
         pair<map<string, string>::iterator,bool> ret;
         /////////////////////////////////
-        string getTemp(string key){
-            for(int i = 0 ; i < this->V_TEMP.size() ; i++){
-                if(V_TEMP[i].id == key){
-                    return V_TEMP[i].temp;
-                }
-            }
-        }
+        
         string genLabel(){
             string val = "_LABEL"+to_string(this->LABEL);
             this->LABEL++;
@@ -117,6 +110,18 @@ class PARSER {
         bool OUTPUTS();
     public:
         void PARSE(vector<TOKEN>);
+        vector<TEMPS> V_TEMP;
+        string getTemp(string key){
+            for(int i = 0 ; i < this->V_TEMP.size() ; i++){
+                if(V_TEMP[i].id == key){
+                    return V_TEMP[i].temp;
+                }
+            }
+            return "NA";
+        }
+        vector<QUADRUPLE> getQuadruples(){
+            return this->QUADRUPLES;
+        }
 };
 
 #endif

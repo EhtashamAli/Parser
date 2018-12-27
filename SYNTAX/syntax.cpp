@@ -4,7 +4,7 @@
 #include <sstream> 
 int lineCount = 0;
 string L_TYPE = "";
-bool flag = true;
+bool flag = false;
 ////////////////////////SEMANTIC//////////////////////////////
 bool PARSER::ifExist(string el) {
     // cout<<this->declarations.find(el)->second<<endl;
@@ -31,19 +31,22 @@ void PARSER::print(){
 }
 
 void PARSER::printQuad(){
+    
     string val = "";
     fstream quad;
     quad.open("../OUTPUT.efh", ios::out);
     int iter;
     for (vector<QUADRUPLE>::const_iterator iter = QUADRUPLES.begin();
          iter != QUADRUPLES.end(); ++iter){
-             std::cout << iter->op << "\t" << iter->arg1<< "\t" << iter->arg2<< "\t" << iter->target<< "\t" << endl;
-              if(iter->target == "" || iter->target == "if" ){
-                  val = iter->target;
-              } else {
-                  val = iter->target + " = ";
-              }
-              quad<<val <<"" <<  iter->arg1<< " " <<iter->op << " " << iter->arg2<< " " <<  endl;
+            std::cout << iter->op << "\t" << iter->arg1<< "\t" << iter->arg2<< "\t" << iter->target<< "\t" << endl;
+            if(!flag){
+                if(iter->target == "" || iter->target == "if" ){
+                    val = iter->target;
+                } else {
+                    val = iter->target + " = ";
+                }
+                     quad<<val <<"" <<  iter->arg1<< " " <<iter->op << " " << iter->arg2<< " " <<  endl;
+            }
          }
             
 }
@@ -151,6 +154,7 @@ bool PARSER::INPUT_STATEMENTS(){
         if(this->ifExist(toCheck)){
             // cout<<"exist1  "<<toCheck<<endl;
         }else{
+            flag = true;
             cout<<"\t SEMANTIC ERROR :"<<toCheck<<" not declared"<<endl;
         }
         return true;
@@ -173,6 +177,7 @@ bool PARSER::OUTPUTS(){
                 if(this->ifExist(toCheck)){
                     // cout<<"exist1  "<<toCheck<<endl;
                 }else{
+                    flag = true;
                     cout<<"\t SEMANTIC ERROR :"<<toCheck<<" not declared"<<endl;
                 }
                 OUTPUTS();
@@ -193,6 +198,7 @@ bool PARSER::FUNCTION_STATEMENT(){
         getNextToken();getNextToken();
         string key = getNextToken().lexeme;
         if(this->ifExist(key)){
+            flag = true;
             cout<<"\t SEMANTIC error:  "<<key<<"  already declared"<<endl;
         }else{
            this->insert(key,"function");
@@ -214,6 +220,7 @@ bool PARSER::PARAMETERS(){
         string key = getNextToken().lexeme;
         // cout<<var<<endl;
         if(this->ifExist(key)){
+            flag = true;
             cout<<"\t SEMANTIC error:  "<<key<<"  already declared"<<endl;
         }else{
            this->insert(key,var);;
@@ -237,6 +244,7 @@ bool PARSER::FUNCTION_CALL(){
         if(ifType(id) == "function"){
 
         }else{
+            flag = true;
             cout<<"\t SEMANTIC ERROR: NO FUNCTION DEFINED WITH : "<<id<<endl;
         }
         getNextToken();
@@ -255,6 +263,7 @@ bool PARSER::ARGUMENTS(){
         if(ifExist(id)){
 
         }else{
+            flag = true;
             cout<<"\t SEMANTIC ERROR: NO IDENTIFIER DEFINED WITH : "<<id<<endl;
         }
         if(ARGUMENTS()){
@@ -280,6 +289,7 @@ bool PARSER::DECLARATION_STATEMENT(){
         L_TYPE = var;
         string key = getNextToken().lexeme;
         if(this->ifExist(key)){
+            flag = true;
             cout<<"\t SEMANTIC error:  "<<key<<"  already declared"<<endl;
         }else{
            this->insert(key,var);
@@ -287,10 +297,14 @@ bool PARSER::DECLARATION_STATEMENT(){
         }
         getNextToken();
         TOKEN tk = getNextToken();
-        if(tk.type == "digit" || tk.type == "float"){
-            cout<<tk.lexeme<<"checking"<<endl;
+        if(tk.type == "digit" || tk.type == "float" /*|| tk.type == "STRING"*/){
+            // cout<<tk.lexeme<<"checking"<<endl;
             QUADRUPLE Q =  QUADRUPLE("" , tk.lexeme , "" , this->getTemp(key));
             this->QUADRUPLES.push_back(Q); 
+        }
+        if(tk.type == "STRING" || tk.type == "CHAR"){
+            flag = true;
+            cout<<"\t SEMANTIC error:  "<<key<<"  type mismatch"<<endl;
         }
         back_track();save_cursor();
         getNextToken();
@@ -309,6 +323,7 @@ bool PARSER::DECLARATION_STATEMENT(){
         string var = getNextToken().lexeme;
         string key = getNextToken().lexeme;
         if(this->ifExist(key)){
+            flag = true;
             cout<<"symantic error:  "<<key<<"  already declared"<<endl;
         }else{
             this->insert(key,var);
@@ -320,6 +335,7 @@ bool PARSER::DECLARATION_STATEMENT(){
             // cout<<"exist1  "<<toCheck<<endl;
             // return true; 
         }else{
+            flag = true;
             cout<<"\t SEMANTIC ERROR :"<<toCheck<<" not declared"<<endl;
             // return true;
         }
@@ -336,13 +352,19 @@ bool PARSER::ASSIGNMENT_STATEMENT(){
         if(this->ifExist(key)){
             // cout<<"exist2  "<<key<<endl; 
         }else{
+            flag = true;
             cout<<"\t SEMANTIC ERROR :"<<key<<" not declared"<<endl;
         }
         getNextToken();
         TOKEN tk = getNextToken();
         if(tk.type == "IDENTIFIER"){
-            cout<<tk.lexeme<<"checking"<<endl;
+            // cout<<tk.lexeme<<"checking"<<endl;
             QUADRUPLE Q =  QUADRUPLE("" ,  this->getTemp(tk.lexeme), "" ,this->getTemp(key));
+            this->QUADRUPLES.push_back(Q); 
+        }
+        if(tk.type == "digit" || tk.type == "float"){
+            // cout<<tk.lexeme<<"checking"<<endl;
+            QUADRUPLE Q =  QUADRUPLE("" , tk.lexeme , "" , this->getTemp(key));
             this->QUADRUPLES.push_back(Q); 
         }
         back_track();save_cursor();
@@ -359,12 +381,15 @@ bool PARSER::ASSIGNMENT_STATEMENT(){
         getNextToken();
         getNextToken();
         if(this->ifExist(key)){
+            cout<<"key"<<key<<endl;
             if(ifType(key) == STRING){
                 cout<<"string"<<key<<endl;
             } else {
+                flag = true;
                 cout<<"\t SEMANTIC ERROR :"<<key<<" TYPE MISMATCH"<<endl;
             }
         }else{
+            flag = true;
             cout<<"\t SEMANTIC ERROR :"<<key<<" not declared"<<endl;
         }
         return true;
@@ -379,9 +404,11 @@ bool PARSER::ASSIGNMENT_STATEMENT(){
             if(ifType(key) == CHAR){
 
             } else {
+                flag = true;
                 cout<<"\t SEMANTIC ERROR :"<<key<<" TYPE MISMATCH"<<endl;
             }
         }else{
+            flag = true;
             cout<<"\t SEMANTIC ERROR :"<<key<<" not declared"<<endl;
         }
         return true;
@@ -525,11 +552,12 @@ bool PARSER::FACTOR(){
         back_track();save_cursor();
         TOKEN TK = getNextToken();
         string var = TK.lexeme;
-        cout<<var<<"identifier"<<endl;
+        // cout<<var<<"identifier"<<endl;
         string type = ifType(var);
         if(type == L_TYPE){
             // cout<<"type"<<type<<"  "<<L_TYPE<<endl;
         } else {
+            flag = true;
             cout <<"ERROR TYPE MISMATCH"<<type<<"  "<<L_TYPE<<endl;
         }
         op = getNextToken().lexeme;
@@ -556,6 +584,7 @@ bool PARSER::FACTOR(){
             // cout<<"exist  "<<var<<endl;
             // return true; 
         }else{
+            flag = true;
             cout<<"SEMANTIC ERROR :"<<var<<" not declared"<<endl;
             // return true;
         }
@@ -567,6 +596,7 @@ bool PARSER::FACTOR(){
         // cout<<val<<"identifier"<<endl;
         // string next = getNextToken().lexeme;
         if(L_TYPE != "digit"){
+            flag = true;
             cout<<"TYPE MISMATCH\t"<<L_TYPE<<" "<<val<<endl;
         }
         // if(!TERM_TYPE(OPERATOR)){
@@ -584,6 +614,7 @@ bool PARSER::FACTOR(){
         string val = getNextToken().lexeme;
         // string next = getNextToken().lexeme;
         if(L_TYPE != "double"){
+            flag = true;
             cout<<"TYPE MISMATCH\t"<<L_TYPE<<" "<<val<<endl;
         }
         // if(!TERM_TYPE(OPERATOR)){
@@ -621,6 +652,7 @@ bool PARSER::pre_inc(){
             QUADRUPLE Q =  QUADRUPLE("+" ,"1"  , this->getTemp(var) , this->getTemp(var));
             this->QUADRUPLES.push_back(Q); 
         }else{
+            flag = true;
             cout<<"\t SEMANTIC ERROR :"<<var<<" not declared"<<endl;
             // return true;
         }
@@ -641,6 +673,7 @@ bool PARSER::pre_dec(){
             QUADRUPLE Q =  QUADRUPLE("-" ,"1" ,  this->getTemp(var) , this->getTemp(var));
             this->QUADRUPLES.push_back(Q); 
         }else{
+            flag = true;
             cout<<"\t SEMANTIC ERROR :"<<var<<" not declared"<<endl;
             // return true;
         }
@@ -659,6 +692,7 @@ bool PARSER::post_dec(){
             QUADRUPLE Q =  QUADRUPLE("-" , this->getTemp(var) , "1" , this->getTemp(var));
             this->QUADRUPLES.push_back(Q); 
         }else{
+            flag = true;
             cout<<"\t SEMANTIC ERROR :"<<var<<" not declared"<<endl;
             // return true;
         }
@@ -679,6 +713,7 @@ bool PARSER::post_inc(){
             QUADRUPLE Q =  QUADRUPLE("+" , this->getTemp(var) , "1" , this->getTemp(var));
             this->QUADRUPLES.push_back(Q); 
         }else{
+            flag = true;
             cout<<"\t SEMANTIC ERROR :"<<var<<" not declared"<<endl;
             // return true;
         }
@@ -777,6 +812,7 @@ bool PARSER::TYPE(){
             // cout<<"exist  "<<var<<endl;
             // return true; 
         }else{
+            flag = true;
             cout<<"\t SEMANTIC ERROR :"<<var<<" not declared"<<" under line no: "<<lineCount<<endl;
             // return true;
         }
@@ -794,7 +830,7 @@ bool PARSER::LT_OP(){
         string ar1 = getNextToken().lexeme;
         string op = getNextToken().lexeme;
         string ar2 = getNextToken().lexeme;
-        QUADRUPLE Q =  QUADRUPLE(">" , this->getTemp(ar1) , this->getTemp(ar2) , this->genTarget());
+        QUADRUPLE Q =  QUADRUPLE(">=" , this->getTemp(ar1) , this->getTemp(ar2) , this->genTarget());
         this->QUADRUPLES.push_back(Q);
         return true;
     }
@@ -807,7 +843,12 @@ bool PARSER::GT_OP(){
         string ar1 = getNextToken().lexeme;
         string op = getNextToken().lexeme;
         string ar2 = getNextToken().lexeme;
-        QUADRUPLE Q =  QUADRUPLE("<" , ar1 , ar2 , this->genTarget());
+        if(this->ifExist(ar1) && this->ifExist(ar2)){
+
+        }else{
+            cout<<"\t SEMANTIC ERROR :"<<ar1<<" "<<ar2<<" not declared"<<" under line no: "<<lineCount<<endl;
+        }
+        QUADRUPLE Q =  QUADRUPLE("<=" , this->getTemp(ar1) , this->getTemp(ar2) , this->genTarget());
         this->QUADRUPLES.push_back(Q);
         return true;
     }
@@ -821,7 +862,12 @@ bool PARSER::EQ_OP(){
         string op = getNextToken().lexeme;
         op += getNextToken().lexeme;
         string ar2 = getNextToken().lexeme;
-        QUADRUPLE Q =  QUADRUPLE("!=" , ar1 , ar2 , this->genTarget());
+        if(this->ifExist(ar1) && this->ifExist(ar2)){
+
+        }else{
+            cout<<"\t SEMANTIC ERROR :"<<ar1<<" "<<ar2<<" not declared"<<" under line no: "<<lineCount<<endl;
+        }
+        QUADRUPLE Q =  QUADRUPLE("!=" , this->getTemp(ar1) , this->getTemp(ar2) , this->genTarget());
         this->QUADRUPLES.push_back(Q);
         return true;
     }
@@ -835,7 +881,12 @@ bool PARSER::NE_OP(){
         string op = getNextToken().lexeme;
         op += getNextToken().lexeme;
         string ar2 = getNextToken().lexeme;
-        QUADRUPLE Q =  QUADRUPLE("==" , ar1 , ar2 , this->genTarget());
+        if(this->ifExist(ar1) && this->ifExist(ar2)){
+
+        }else{
+            cout<<"\t SEMANTIC ERROR :"<<ar1<<" "<<ar2<<" not declared"<<" under line no: "<<lineCount<<endl;
+        }
+        QUADRUPLE Q =  QUADRUPLE("==" , this->getTemp(ar1) , this->getTemp(ar2) , this->genTarget());
         this->QUADRUPLES.push_back(Q);
         return true;
     }
@@ -849,7 +900,12 @@ bool PARSER::LE_OP(){
         string op = getNextToken().lexeme;
         op += getNextToken().lexeme;
         string ar2 = getNextToken().lexeme;
-        QUADRUPLE Q =  QUADRUPLE(">=" , ar1 , ar2 , this->genTarget());
+        if(this->ifExist(ar1) && this->ifExist(ar2)){
+
+        }else{
+            cout<<"\t SEMANTIC ERROR :"<<ar1<<" "<<ar2<<" not declared"<<" under line no: "<<lineCount<<endl;
+        }
+        QUADRUPLE Q =  QUADRUPLE(">" , this->getTemp(ar1) , this->getTemp(ar2) , this->genTarget());
         this->QUADRUPLES.push_back(Q);
         return true;
     }
@@ -863,7 +919,12 @@ bool PARSER::GE_OP(){
         string op = getNextToken().lexeme;
         op += getNextToken().lexeme;
         string ar2 = getNextToken().lexeme;
-        QUADRUPLE Q =  QUADRUPLE("<=" , ar1 , ar2 , this->genTarget());
+        if(this->ifExist(ar1) && this->ifExist(ar2)){
+
+        }else{
+            cout<<"\t SEMANTIC ERROR :"<<ar1<<" "<<ar2<<" not declared"<<" under line no: "<<lineCount<<endl;
+        }
+        QUADRUPLE Q =  QUADRUPLE("<" , this->getTemp(ar1) , this->getTemp(ar2) , this->genTarget());
         this->QUADRUPLES.push_back(Q);
         return true;
     }
@@ -884,9 +945,29 @@ bool PARSER::ITERATION_STATEMENT(){
 }
 bool PARSER::LOOP(){
     // return  (TERM("loop") && TERM("(") && DECLARATION_STATEMENT() && TERM(";") && CONDITION() && TERM(";") && INC_DEC_STATEMENT() && TERM(")") && TERM("{") && STATEMENT() && TERM("}"));
-    if(TERM("loop") && TERM("(")){
-        if(DECLARATION_STATEMENT() && TERM(";") && CONDITION() && TERM(";") && INC_DEC_STATEMENT() && TERM(")") && TERM("{") && STATEMENT() && TERM("}")){
-            return true;
+    string last = "";
+    string label = "";
+    if(TERM("loop") && TERM("(") && DECLARATION_STATEMENT() && TERM(";")){
+        label = genLabel();
+        LABELS.push_back(label);
+        QUADRUPLE Q =  QUADRUPLE("", "", label+":" , "");
+        this->QUADRUPLES.push_back(Q);
+        if(CONDITION() && TERM(";")){
+                if (!QUADRUPLES.empty())
+                    last = QUADRUPLES.back().target;
+                label = genLabel();
+                QUADRUPLE Q =  QUADRUPLE("GOTO", last, label , "if");
+                this->QUADRUPLES.push_back(Q);
+           if(INC_DEC_STATEMENT() && TERM(")") && TERM("{") && STATEMENT()){
+                QUADRUPLE Q =  QUADRUPLE("GOTO", "", LABELS.back() , "");
+                this->QUADRUPLES.push_back(Q);
+               if(TERM("}")){
+                    LABELS.push_back(label);
+                    QUADRUPLE Q =  QUADRUPLE("", "", LABELS.back()+":" , "");
+                    this->QUADRUPLES.push_back(Q);
+                    return true;
+               }
+           }
         }
     }
     return false;
@@ -922,5 +1003,29 @@ bool PARSER::WHILE(){
     return false;
 }
 bool PARSER::DO_WHILE(){
-    return  (TERM("loop") && TERM("{") && STATEMENT() && TERM("}") && TERM("until") && TERM("(") && CONDITION() && TERM(")"));
+    // return  (TERM("loop") && TERM("{") && STATEMENT() && TERM("}") && TERM("until") && TERM("(") && CONDITION() && TERM(")"));
+    string last = "";
+    if(TERM("loop") && TERM("{")){
+        string label = genLabel();
+        LABELS.push_back(label);
+        QUADRUPLE Q =  QUADRUPLE("", "", label+":" , "");
+        this->QUADRUPLES.push_back(Q);
+        if(STATEMENT() && TERM("}") && TERM("until") && TERM("(")){
+            if(CONDITION()){
+                if (!QUADRUPLES.empty())
+                last = QUADRUPLES.back().target;
+                label = genLabel();
+                QUADRUPLE Q =  QUADRUPLE("GOTO", last, label , "if");
+                this->QUADRUPLES.push_back(Q);
+                if(TERM(")")){
+                    QUADRUPLE Q =  QUADRUPLE("GOTO", "", LABELS.back() , "");
+                    this->QUADRUPLES.push_back(Q);
+                    QUADRUPLE Q1 =  QUADRUPLE("", "", label+":" , "");
+                    this->QUADRUPLES.push_back(Q1);
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
